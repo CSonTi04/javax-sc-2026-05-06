@@ -20,7 +20,7 @@ public class EmployeesController {
     //key, value -> kulcs nem egyedi, value maga az üzenet
     //ugyanazzal a kulccsal az üzenet ugyanabba a partícióba fog kerülni -> tartja a sorrendet
     //így pl az update nem tudná beelőzni a create-et
-    private KafkaTemplate<String, CreateEmployeeRequestEvent> kafkaTemplate;
+    private KafkaTemplate<String, CreateEmployeeRequest> kafkaTemplate;
 
     @GetMapping("/")
     @Observed(name = "employees.list", contextualName = "employees.list", lowCardinalityKeyValues = { "client-type", "rest-client" })
@@ -45,7 +45,7 @@ public class EmployeesController {
     public ModelAndView createEmployeePost(@ModelAttribute Employee command) {
         employeesClient.createEmployee(command);
         //kulcs nem kötelező
-        kafkaTemplate.send("employees-backend-request", new CreateEmployeeRequestEvent(command.getName()));
+        kafkaTemplate.send("employees-backend-request", new CreateEmployeeRequest(command.getName()));
         return new ModelAndView("redirect:/");
     }
 

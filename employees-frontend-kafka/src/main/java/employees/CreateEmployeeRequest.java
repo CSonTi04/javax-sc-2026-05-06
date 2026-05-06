@@ -1,6 +1,6 @@
 package employees;
 
-public record CreateEmployeeRequestEvent(
+public record CreateEmployeeRequest(
         String name
 ) {
 }

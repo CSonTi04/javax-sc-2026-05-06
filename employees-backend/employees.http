@@ -7,7 +7,7 @@ GET http://localhost:8081/api/employees/2
 Accept: application/json
 
 ###
-# problem deatil
+# problem detail
 GET http://localhost:8081/api/employees/666
 Accept: application/json
 
@@ -22,7 +22,7 @@ Accept: application/json
 }
 
 ###
-# validation error
+# validation error - probelm detail
 POST http://localhost:8081/api/employees
 Content-Type: application/json
 Accept: application/json

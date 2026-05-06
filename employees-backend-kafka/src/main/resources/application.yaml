@@ -18,6 +18,8 @@ spring:
     consumer:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       group-id: employees-backend
+      properties:
+        spring.json.trusted.packages: "employees"
 
 logging:
   level:

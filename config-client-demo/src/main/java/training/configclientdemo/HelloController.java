@@ -10,6 +10,10 @@ public class HelloController {
 
     private final DemoProperties demoProperties;
 
+    public HelloController(DemoProperties demoProperties) {
+        this.demoProperties = demoProperties;
+    }
+
     @GetMapping
     public String hello() {
         return demoProperties.prefix().concat(String.valueOf(LocalDateTime.now()));

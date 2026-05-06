@@ -13,6 +13,7 @@ import org.springframework.web.service.registry.ImportHttpServices;
 
 @Configuration
 @EnableConfigurationProperties(EmployeesProperties.class)
+//meg lehet adni, hogy mit használjon a RestClientHttpServiceGroupConfigurer-ben
 @ImportHttpServices(group = "employees-backend", types = EmployeesClient.class)
 @Slf4j
 public class ClientConfig {
@@ -25,7 +26,7 @@ public class ClientConfig {
                     builder.baseUrl(employeesProperties.getBackendUrl()));
 
     }
-
+//    Ez a spring boot 3-mas, ezt váltotta ki a @ImportHttpServices, de így is működik
 //    @Bean
 //    public EmployeesClient employeesClient(RestClient.Builder builder, EmployeesProperties employeesProperties) {
 //        var restClient = builder

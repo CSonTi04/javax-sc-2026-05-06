@@ -11,6 +11,7 @@ import org.springframework.web.service.annotation.PostExchange;
 
 import java.util.List;
 
+//ehhez kell egy config -> ClientConfig
 @HttpExchange("/api/employees")
 public interface EmployeesClient {
 

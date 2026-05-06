@@ -3,6 +3,7 @@ package employees;
 import io.micrometer.observation.annotation.Observed;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -17,6 +18,10 @@ import java.util.Map;
 public class EmployeesController {
 
     private EmployeesClient employeesClient;
+    //key, value -> kulcs nem egyedi, value maga az üzenet
+    //ugyanazzal a kulccsal az üzenet ugyanabba a partícióba fog kerülni -> tartja a sorrendet
+    //így pl az update nem tudná beelőzni a create-et
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     @GetMapping("/")
     @Observed(name = "employees.list", contextualName = "employees.list", lowCardinalityKeyValues = { "client-type", "rest-client" })
@@ -40,6 +45,8 @@ public class EmployeesController {
     @PostMapping("/create-employee")
     public ModelAndView createEmployeePost(@ModelAttribute Employee command) {
         employeesClient.createEmployee(command);
+        //kulcs nem kötelező
+        kafkaTemplate.send("hello", "Employee created: " + command.getName());
         return new ModelAndView("redirect:/");
     }
 

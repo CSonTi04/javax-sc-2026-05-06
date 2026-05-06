@@ -1,0 +1,20 @@
+package employees;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class KafkaGateway {
+    //Lehetne saját gateway annotáció is, de ez is megteszi
+    private final EmployeesService employeesService;
+
+    @KafkaListener(topics = "employees-bakcend-request", groupId = "employees-backend")
+    public void handleRequest(CreateEmployeeRequest request) {
+        log.info("Received request {}", request);
+        employeesService.createEmployee(new EmployeeResource(request.name()));
+    }
+}

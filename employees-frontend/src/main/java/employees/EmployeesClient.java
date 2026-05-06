@@ -1,10 +1,8 @@
 package employees;
 
 
-import io.micrometer.observation.annotation.Observed;
 import org.springframework.resilience.annotation.ConcurrencyLimit;
 import org.springframework.resilience.annotation.Retryable;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.service.annotation.GetExchange;
@@ -24,6 +22,6 @@ public interface EmployeesClient {
     @PostExchange
     Employee createEmployee(@RequestBody Employee employee);
 
-    @GetMapping
+    @GetExchange
     Employee findEmployeeById(@PathVariable Long employeeId);
 }

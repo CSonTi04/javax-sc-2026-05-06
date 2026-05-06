@@ -152,12 +152,17 @@ sequenceDiagram
 - Frontend UI: `http://localhost:8080`
 - Backend API list: `GET http://localhost:8081/api/employees`
 - Backend API by id: `GET http://localhost:8081/api/employees/{id}`
+- Config client demo: `GET http://localhost:8080/api/hello` (when running `config-client-demo`)
 - Kafdrop: `http://localhost:9000`
 
-Ready-to-run API requests: `employees-backend/employees.http`
+Ready-to-run API request collections:
+
+- `employees-backend/employees.http`
+- `employees-backend-kafka/employees.http`
 
 ## Notes
 
 - Config Server points to `file:///C:/Training/config`; adjust `config-server-demo/src/main/resources/application.properties` if needed.
-- `employees-frontend-kafka` defines topic `hello` and publishes an event when creating an employee.
+- `employees-frontend-kafka` defines topic `hello` (10 partitions) and publishes an event when creating an employee.
+- Kafka publish currently happens in `employees-frontend-kafka` (`EmployeesController`), not in the backend modules.
 - `UserController` in frontend modules references extra auth-related properties for some scenarios.

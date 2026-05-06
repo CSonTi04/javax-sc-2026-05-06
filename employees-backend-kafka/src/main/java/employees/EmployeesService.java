@@ -1,6 +1,5 @@
 package employees;
 
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -10,11 +9,11 @@ import java.util.List;
 import java.util.function.Supplier;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class EmployeesService {
 
     private final EmployeesRepository repository;
-    private KafkaTemplate<String, EmployeeHasBeenCreatedEvent> kafkaTemplate;
+    private final KafkaTemplate<String, EmployeeHasBeenCreatedEvent> kafkaTemplate;
 
     public List<EmployeeResource> listEmployees() {
         return repository.findAllResources();

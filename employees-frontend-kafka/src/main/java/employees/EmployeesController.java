@@ -43,7 +43,6 @@ public class EmployeesController {
 
     @PostMapping("/create-employee")
     public ModelAndView createEmployeePost(@ModelAttribute Employee command) {
-        employeesClient.createEmployee(command);
         //kulcs nem kötelező
         kafkaTemplate.send("employees-backend-request", new CreateEmployeeRequest(command.getName()));
         return new ModelAndView("redirect:/");

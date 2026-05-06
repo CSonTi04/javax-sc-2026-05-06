@@ -1,73 +1,67 @@
 # Spring Cloud Training Workspace
 
-This repository contains multiple Spring Boot/Spring Cloud demo applications:
+This repository contains Spring Boot/Spring Cloud demos, with both non-Kafka and Kafka-enabled employee app variants.
 
-- `config-server-demo`: Spring Cloud Config Server
+## What Is In This Repo
+
+- `config-server-demo`: Spring Cloud Config Server (`:8888`)
 - `config-client-demo`: Spring Cloud Config Client sample
-- `employees-backend`: REST API + PostgreSQL + Liquibase
-- `employees-frontend`: server-side UI that calls `employees-backend`
-- `kafka/`: Docker Compose stack — Apache Kafka 4.2.0 (KRaft) + Kafdrop UI
+- `employees-backend`: REST API + PostgreSQL + Liquibase (`:8081`)
+- `employees-frontend`: server-side UI for `employees-backend` (`:8080`)
+- `employees-backend-kafka`: backend variant (same API/DB profile, `:8081`)
+- `employees-frontend-kafka`: frontend variant with Kafka producer (`:8080`)
+- `kafka/`: Docker Compose infra for Kafka + Kafdrop
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Browser[Browser] --> FE[employees-frontend\n:8080]
-    FE --> BE[employees-backend\n:8081]
-    BE --> PG[(PostgreSQL\n:5432)]
+    subgraph EmployeesBase[Employees stack (base)]
+        Browser[Browser] --> FE[employees-frontend\n:8080]
+        FE --> BE[employees-backend\n:8081]
+        BE --> PG[(PostgreSQL\n:5432)]
+    end
+
+    subgraph EmployeesKafka[Employees stack (Kafka variant)]
+        BrowserK[Browser] --> FEK[employees-frontend-kafka\n:8080]
+        FEK --> BEK[employees-backend-kafka\n:8081]
+        BEK --> PG
+        FEK -->|publish event| Kafka[Kafka broker\n:9092]
+        Kafdrop[Kafdrop UI\n:9000] --> Kafka
+    end
 
     Client[config-client-demo] --> ConfigServer[config-server-demo\n:8888]
     ConfigServer --> ConfigRepo[(Local Git config repo\nfile:///C:/Training/config)]
-
-    BE -->|produce/consume| Kafka[Kafka broker\n:9092]
-    Kafdrop[Kafdrop UI\n:9000] --> Kafka
 ```
 
-## Modules
+## Important Choice
 
-### `config-server-demo`
+Run only one employees pair at a time:
 
-- App name: `config-server-demo`
-- Port: `8888`
-- Config source: local Git repo path set to `file:///C:/Training/config`
+- base pair: `employees-backend` + `employees-frontend`
+- Kafka pair: `employees-backend-kafka` + `employees-frontend-kafka`
 
-### `config-client-demo`
+Both pairs use the same ports (`8080` and `8081`), so running both together causes port conflicts.
 
-- App name: `config-client-demo`
-- Intended to import config from the Config Server (`localhost:8888`)
+## Kafka Infra (`kafka/docker-compose.yaml`)
 
-### `employees-backend`
-
-- App name: `employees-backend`
-- Port: `8081`
-- Database: PostgreSQL (`jdbc:postgresql://localhost:5432/employees`)
-- DB migration: Liquibase (`classpath:db/db-changelog.yaml`)
-- REST base path: `/api/employees`
-
-### `employees-frontend`
-
-- App name: `employees-frontend`
-- Port: `8080`
-- Calls backend at `http://localhost:8081`
-
-### `kafka/` — Kafka + Kafdrop (Docker Compose)
-
-Located in `kafka/docker-compose.yaml`. Single-node KRaft cluster (no ZooKeeper).
+Single-node KRaft cluster (no ZooKeeper).
 
 | Service | Image | Ports |
 |---|---|---|
-| `kafka` | `apache/kafka:4.2.0` | `9092` (external host access) |
+| `kafka` | `apache/kafka:4.2.0` | `9092` (host access) |
 | `kafdrop` | `obsidiandynamics/kafdrop:4.2.0` | `9000` (web UI) |
 
 Listener layout:
-- `EXTERNAL` (`:9092`) — for host-machine clients
-- `CLIENT` (`kafka:9093`) — inter-container traffic (used by Kafdrop)
-- `CONTROLLER` (`:9094`) — internal KRaft controller
+
+- `EXTERNAL` (`:9092`) for host-machine clients
+- `CLIENT` (`kafka:9093`) for Docker-network clients (for example Kafdrop)
+- `CONTROLLER` (`:9094`) for KRaft controller traffic
 
 ## Prerequisites
 
-- Java + Maven Wrapper (`mvnw` is included per module)
-- Docker (for PostgreSQL and Kafka)
+- Java + Maven Wrapper (`mvnw`/`mvnw.cmd` in each module)
+- Docker (PostgreSQL + Kafka)
 
 ## Quick Start
 
@@ -83,42 +77,48 @@ docker run -d -e POSTGRES_DB=employees -e POSTGRES_USER=employees -e POSTGRES_PA
 docker compose -f kafka/docker-compose.yaml up -d
 ```
 
-Kafdrop UI: [http://localhost:9000](http://localhost:9000)
+Kafdrop UI: `http://localhost:9000`
 
-To stop:
+Stop Kafka stack:
 
 ```powershell
 docker compose -f kafka/docker-compose.yaml down
 ```
 
-### 3) Run employees apps
+### 3) Start one employees app pair
 
-Start backend:
+Base pair:
 
 ```powershell
 cd employees-backend
 .\mvnw.cmd spring-boot:run
 ```
 
-Start frontend (new terminal):
-
 ```powershell
 cd employees-frontend
 .\mvnw.cmd spring-boot:run
 ```
 
-Open: `http://localhost:8080`
+Kafka pair:
 
-### 4) (Optional) Run config demo apps
+```powershell
+cd employees-backend-kafka
+.\mvnw.cmd spring-boot:run
+```
 
-Start Config Server:
+```powershell
+cd employees-frontend-kafka
+.\mvnw.cmd spring-boot:run
+```
+
+Open UI: `http://localhost:8080`
+
+### 4) Optional config demo
 
 ```powershell
 cd config-server-demo
 .\mvnw.cmd spring-boot:run
 ```
-
-Start Config Client (new terminal):
 
 ```powershell
 cd config-client-demo
@@ -131,16 +131,16 @@ cd config-client-demo
 sequenceDiagram
     participant DB as PostgreSQL
     participant K as Kafka
-    participant BE as employees-backend
-    participant FE as employees-frontend
+    participant FE as employees-frontend(-kafka)
+    participant BE as employees-backend(-kafka)
     participant CS as config-server-demo
     participant CC as config-client-demo
 
-    Note over DB,FE: Employees stack
+    Note over DB,BE: Employees stack
     DB->>BE: Accept DB connections
-    K->>BE: Kafka broker ready
     BE->>BE: Apply Liquibase changelog
-    FE->>BE: HTTP calls to /api/employees
+    FE->>BE: Call /api/employees
+    FE->>K: Publish event (Kafka frontend variant)
 
     Note over CS,CC: Config demo stack
     CS->>CS: Load config from local Git path
@@ -152,11 +152,12 @@ sequenceDiagram
 - Frontend UI: `http://localhost:8080`
 - Backend API list: `GET http://localhost:8081/api/employees`
 - Backend API by id: `GET http://localhost:8081/api/employees/{id}`
-- Kafdrop (Kafka UI): `http://localhost:9000`
+- Kafdrop: `http://localhost:9000`
 
-See `employees-backend/employees.http` for ready-to-run API requests.
+Ready-to-run API requests: `employees-backend/employees.http`
 
 ## Notes
 
-- The Config Server currently points to `file:///C:/Training/config`; ensure this path exists on your machine or adjust `config-server-demo/src/main/resources/application.properties`.
-- Additional auth-related properties are referenced in `employees-frontend` (`UserController`) and may require extra environment/config in some scenarios.
+- Config Server points to `file:///C:/Training/config`; adjust `config-server-demo/src/main/resources/application.properties` if needed.
+- `employees-frontend-kafka` defines topic `hello` and publishes an event when creating an employee.
+- `UserController` in frontend modules references extra auth-related properties for some scenarios.

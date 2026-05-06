@@ -1,7 +1,7 @@
 package employees;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 public class EmployeesService {
 
     private final EmployeesRepository repository;
-    private final KafkaTemplate<String, EmployeeHasBeenCreatedEvent> kafkaTemplate;
+    private final ApplicationEventPublisher publisher;
 
     public List<EmployeeResource> listEmployees() {
         return repository.findAllResources();
@@ -28,7 +28,7 @@ public class EmployeesService {
         repository.save(employee);
         //events mögött legyen objektum, legyen immutable -> record
         //hogyan legyen json?
-        kafkaTemplate.send("employees-bakcend-events", new EmployeeHasBeenCreatedEvent(employee.getId(), employee.getName()));
+        publisher.publishEvent(new EmployeeHasBeenCreatedEvent(employee.getId(), employee.getName()));
         return toDto(employee);
     }
 

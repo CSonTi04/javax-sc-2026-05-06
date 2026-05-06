@@ -1,0 +1,29 @@
+# --- Build outputs (all modules) ---
+**/target/
+**/build/
+
+# --- Logs / JVM crash files ---
+*.log
+hs_err_pid*
+replay_pid*
+
+# --- IDE / editor metadata ---
+**/.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated
+.springBeans
+.sts4-cache
+.vscode/
+
+# --- OS / temp files ---
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+

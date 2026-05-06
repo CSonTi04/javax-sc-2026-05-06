@@ -1,0 +1,4 @@
+# Module-specific files only.
+# Common Maven/IDE/editor ignores are defined in the repository root `.gitignore`.
+HELP.md
+.mvn/wrapper/maven-wrapper.jar

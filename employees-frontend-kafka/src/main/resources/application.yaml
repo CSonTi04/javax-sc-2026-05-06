@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: employees-frontend
+  kafka:
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 logging:
   level:

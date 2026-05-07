@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: employees-frontend
+  kafka:
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+
+logging:
+  level:
+    employees: DEBUG
+    org.hibernate.SQL: TRACE
+
+employees:
+  backend-url: http://localhost:8081

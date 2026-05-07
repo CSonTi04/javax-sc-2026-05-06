@@ -43,6 +43,7 @@ public class EmployeesController {
     public ModelAndView createEmployeePost(@ModelAttribute Employee command) {
         //topic-ot logikai névként property-ben tároljuk, így könnyen változtatható, ha szükséges
         streamBridge.send("backend-request", new CreateEmployeeRequest(command.getName()));
+        //itt kellene callback-es megoldás, hogy megfelelő legyen a kommunikáció, így a refresh most nem jó
         return new ModelAndView("redirect:/");
     }
 

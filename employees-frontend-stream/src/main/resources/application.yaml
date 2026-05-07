@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: employees-frontend
+  cloud:
+    stream:
+      bindings:
+        backend-request:
+          destination: employees-backend-request
 
 logging:
   level:

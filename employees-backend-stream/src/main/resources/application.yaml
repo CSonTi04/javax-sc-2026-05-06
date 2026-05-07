@@ -12,6 +12,12 @@ spring:
     open-in-view: false
   liquibase:
     change-log: classpath:db/db-changelog.yaml
+  cloud:
+    stream:
+      function:
+        bindings:
+          createEmployeeFunction-in-0: employees-backend-request
+          createEmployeeFunction-out-0: employees-backend-response
 
 logging:
   level:

@@ -9,6 +9,9 @@ spring:
       bindings:
         backend-request:
           destination: employees-backend-request
+      function:
+        bindings:
+          employeeCreated-in-0: employees-backend-response
 
 logging:
   level:

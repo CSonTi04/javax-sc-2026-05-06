@@ -133,3 +133,15 @@ BE for FE tipikusan arra let kitalálva, hogy más adat kell az asztali és mobi
 Ki írja a BE for FE-t -> általában jobba, ha node-ban az FE-s írja meg, kevesebb turnover
 
 Cache-t is tud
+
+Kubernetes -> sidecar konténerek, hozzáragasztva a pod-hoz, ezt az infra adja, ide kerül be a resilience 4j funkcionalitását
+chaos monkey-zni is itt lehetne -> es a service mesh -> Isto
+
+Gateway lehet reactive is, hogy bírja a nagy terhelést -> 1 felhasználó kiszolgálási ideje nem változik, csak várakoznak -> felhasználó azt látja, hogy vár, de nem fog összeomlani
+
+Jöttek a virtuális szálak -> megzavarta az állóvizet és a reactive dolgokat
+https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html
+Virtuáis szál foglal memóriát a stackjével
+Virtuális szál egy sima objekt, ezért nagyon gyorsan léterjönnek
+Fizikai szálak esetén kb 100 a limit mondjuk 8 cpu mag esetén
+Javaban írt ütemező van, hogy a carrier-re kerüljön a virtuális szál

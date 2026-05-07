@@ -65,6 +65,14 @@ This workspace is centered around a typical microservice toolchain and the Sprin
 - Observability and operations, including OpenTelemetry and Spring Boot Admin
 - API Gateway and Backend for Frontend patterns
 
+Likely follow-up discussion topics from the notes:
+
+- Spring Cloud Circuit Breaker and resilience repair strategies
+- Spring Cloud Gateway as an entry point in front of multiple services
+- Observability with tracing and OpenTelemetry
+- Tradeoffs between reactive gateways and virtual-thread based designs
+- Service mesh and sidecar-based infrastructure concerns in Kubernetes environments
+
 Not covered in this training repo, but relevant nearby topics:
 
 - RabbitMQ as an alternative message broker for Spring Cloud Stream binders
@@ -357,10 +365,22 @@ sequenceDiagram
 - **Binder portability**: Spring Cloud Stream keeps the code focused on message contracts. Switching from Kafka to another binder such as RabbitMQ is primarily a configuration concern.
 - **Consumer groups and offsets**: Kafka tracks offsets per consumer group, so different groups can consume the same topic independently.
 - **API Gateway**: a gateway can centralize routing, authentication, authorization, logging, rate limiting, and resilience policies in front of multiple services.
+- **Gateway placement**: a gateway can sit between frontend and services, or internally between service groups when cross-cutting concerns would otherwise be duplicated everywhere.
 - **Backend for Frontend**: a BFF can shape data for a specific UI, reduce chatty frontend traffic, and perform API composition for web vs mobile clients.
 - **API composition**: when one screen needs data from several services, composition can live in the frontend, a dedicated composition service, or a BFF depending on ownership and latency constraints.
+- **Gateway limitations**: simple routing gateways do not automatically solve API composition; aggregation often still belongs in a BFF or dedicated composition service.
+- **Reactive vs virtual threads**: reactive gateways still help under heavy load, but virtual threads change the tradeoff space by making request-per-thread designs cheaper again.
+- **Service mesh / sidecars**: resilience, traffic control, and chaos testing can also move into the platform layer through sidecars and service mesh tooling such as Istio.
 - **Observability**: distributed systems become much easier to debug once metrics, logs, traces, and correlation IDs are treated as first-class concerns.
 - **SBOM awareness**: software bills of materials matter when you need to understand dependency exposure and security posture across multiple services.
+
+## Day 2 Topics
+
+- **API Gateway**: the frontend can talk to one gateway endpoint while the gateway routes by URL, handles auth concerns, and can add logging, load balancing, and resilience policies.
+- **Backend for Frontend**: a BFF can tailor data per client type, for example separate web and mobile needs, and can hide noisy backend call patterns from the UI.
+- **Composition strategies**: if one response requires several services, composition may live in the frontend, a BFF, a dedicated composition service, or behind GraphQL-style querying.
+- **Platform concerns**: Kubernetes sidecars and service mesh infrastructure can absorb some cross-cutting concerns that would otherwise be repeated in each microservice.
+- **Implementation caution**: business code should stay simple and explicit; heavy reflection and unnecessary abstraction are usually framework concerns, not application goals.
 
 ## Useful Endpoints
 
@@ -383,15 +403,21 @@ Ready-to-run API request collections:
 - [12-factor app](https://12factor.net/)
 - [Enterprise Integration Patterns](https://www.enterpriseintegrationpatterns.com/)
 - [Spring Integration](https://spring.io/projects/spring-integration)
+- [Spring for Apache Kafka](https://spring.io/projects/spring-kafka)
 - [Spring Cloud Stream](https://spring.io/projects/spring-cloud-stream)
 - [Spring Cloud Schema Registry](https://docs.spring.io/spring-cloud-schema-registry/docs/current/reference/html/spring-cloud-schema-registry.html)
+- [Spring Cloud Gateway](https://spring.io/projects/spring-cloud-gateway)
 - [Spring Cloud Circuit Breaker overview](https://www.baeldung.com/spring-cloud-circuit-breaker)
 - [Spring Core resilience features](https://spring.io/blog/2025/09/09/core-spring-resilience-features)
 - [Resilience4j getting started](https://resilience4j.readme.io/docs/getting-started)
 - [Chaos Monkey for Spring Boot](https://codecentric.github.io/chaos-monkey-spring-boot/)
+- [OpenTelemetry documentation](https://opentelemetry.io/docs/)
+- [RabbitMQ documentation](https://www.rabbitmq.com/docs)
 - [Spring Modulith](https://www.jtechlog.hu/2022/12/19/spring-modulith.html)
 - [Spring Boot Admin getting started](https://docs.spring-boot-admin.com/3.0.0/getting-started.html)
 - [API Gateway overview](https://www.ibm.com/think/topics/api-gateway)
+- [Istio documentation](https://istio.io/latest/docs/)
+- [Java virtual threads](https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html)
 - [JPA equals/hashCode deep-dive](https://jpa-buddy.com/blog/hopefully-the-final-article-about-equals-and-hashcode-for-jpa-entities-with-db-generated-ids/)
 - [QUIC / HTTP3](https://www.f5.com/glossary/quic-http3)
 
@@ -408,3 +434,4 @@ Ready-to-run API request collections:
 - Kafka consumer groups share an offset per group: each consumer group independently tracks which messages it has consumed; the broker maintains the offsets.
 - `UserController` in frontend modules references extra auth-related properties for OAuth2/OIDC scenarios (Keycloak integration).
 - API gateways and BFFs are not implemented in this repo, but they are natural next steps once the number of services and frontend consumers grows.
+- The notes also frame virtual threads as an important modern alternative to older reactive-only scaling discussions.

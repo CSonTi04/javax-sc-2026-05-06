@@ -11,6 +11,6 @@ public class MessagingConfig {
 
     @Bean
     public Consumer<CreateEmployeeResponse> employeeCreated() {
-        return request -> log.info("Employee created: id={}, name={}", request.id(), request.name());
+        return request -> log.info("Employee created: id={}, name={}", request.getId(), request.getName());
     }
 }

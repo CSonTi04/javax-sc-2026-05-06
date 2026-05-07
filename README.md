@@ -51,6 +51,26 @@ This repository contains Spring Boot/Spring Cloud demos across four employees ap
 
 Spring Boot apps follow the [12-factor app methodology](https://12factor.net/).
 
+## Training Themes
+
+This workspace is centered around a typical microservice toolchain and the Spring portfolio that supports it.
+
+- Microservice-oriented application design
+- Modern Java language features on JDK 26
+- Messaging with Kafka, Spring for Apache Kafka, and Spring Cloud Stream
+- Event-driven architecture and Enterprise Integration Patterns
+- Configuration management with Spring Cloud Config
+- Security topics around OAuth2 and OpenID Connect
+- Reliability topics around retries, resilience, and circuit breakers
+- Observability and operations, including OpenTelemetry and Spring Boot Admin
+- API Gateway and Backend for Frontend patterns
+
+Not covered in this training repo, but relevant nearby topics:
+
+- RabbitMQ as an alternative message broker for Spring Cloud Stream binders
+- Spring AI for LLM integration
+- GPU/model-training work in Java via newer platform initiatives and JEPs
+
 ## Java SE Language Showcase (`java-se`)
 
 Modern Java 26 features demonstrated in this module:
@@ -63,6 +83,12 @@ Modern Java 26 features demonstrated in this module:
 - **Local variable type inference** — `var`
 - **Virtual threads** — lightweight concurrency via `Thread.ofVirtual()` (Project Loom)
 - **Data-oriented programming** — prefer immutable value types over deep OOP hierarchies; reduce class proliferation with sealed types + pattern matching
+
+Practical direction from the course notes:
+
+- Prefer immutable types where possible
+- Avoid unnecessary class hierarchies when a local decision point or simple data shape is enough
+- Keep abstractions justified by multiple implementations, not by habit
 
 ## Architecture
 
@@ -324,6 +350,18 @@ sequenceDiagram
     K->>FEA: Binder consumer receives response
 ```
 
+## Architectural Notes
+
+- **EDA**: event-driven architecture is a natural fit for Kafka and Spring Cloud Stream. Spring Integration is the Spring project that most directly implements the Enterprise Integration Patterns vocabulary.
+- **Raw Kafka vs Stream**: the Kafka pair shows explicit topic handling with `KafkaTemplate` and `@KafkaListener`; the Stream pairs move messaging behind logical bindings and functions.
+- **Binder portability**: Spring Cloud Stream keeps the code focused on message contracts. Switching from Kafka to another binder such as RabbitMQ is primarily a configuration concern.
+- **Consumer groups and offsets**: Kafka tracks offsets per consumer group, so different groups can consume the same topic independently.
+- **API Gateway**: a gateway can centralize routing, authentication, authorization, logging, rate limiting, and resilience policies in front of multiple services.
+- **Backend for Frontend**: a BFF can shape data for a specific UI, reduce chatty frontend traffic, and perform API composition for web vs mobile clients.
+- **API composition**: when one screen needs data from several services, composition can live in the frontend, a dedicated composition service, or a BFF depending on ownership and latency constraints.
+- **Observability**: distributed systems become much easier to debug once metrics, logs, traces, and correlation IDs are treated as first-class concerns.
+- **SBOM awareness**: software bills of materials matter when you need to understand dependency exposure and security posture across multiple services.
+
 ## Useful Endpoints
 
 - Frontend UI: `http://localhost:8080`
@@ -339,15 +377,21 @@ Ready-to-run API request collections:
 - `employees-backend-stream/employees.http`
 - `employees-backend-avro/employees.http`
 
-## Reference Links
+## Reading Material
 
 - [Microservice patterns](https://microservices.io/patterns/)
-- [Enterprise Integration Patterns](https://www.enterpriseintegrationpatterns.com/) — the theory behind Spring Integration
+- [12-factor app](https://12factor.net/)
+- [Enterprise Integration Patterns](https://www.enterpriseintegrationpatterns.com/)
+- [Spring Integration](https://spring.io/projects/spring-integration)
 - [Spring Cloud Stream](https://spring.io/projects/spring-cloud-stream)
 - [Spring Cloud Schema Registry](https://docs.spring.io/spring-cloud-schema-registry/docs/current/reference/html/spring-cloud-schema-registry.html)
-- [Spring Core Resilience features](https://spring.io/blog/2025/09/09/core-spring-resilience-features)
-- [Resilience4j](https://resilience4j.readme.io/docs/getting-started)
+- [Spring Cloud Circuit Breaker overview](https://www.baeldung.com/spring-cloud-circuit-breaker)
+- [Spring Core resilience features](https://spring.io/blog/2025/09/09/core-spring-resilience-features)
+- [Resilience4j getting started](https://resilience4j.readme.io/docs/getting-started)
+- [Chaos Monkey for Spring Boot](https://codecentric.github.io/chaos-monkey-spring-boot/)
 - [Spring Modulith](https://www.jtechlog.hu/2022/12/19/spring-modulith.html)
+- [Spring Boot Admin getting started](https://docs.spring-boot-admin.com/3.0.0/getting-started.html)
+- [API Gateway overview](https://www.ibm.com/think/topics/api-gateway)
 - [JPA equals/hashCode deep-dive](https://jpa-buddy.com/blog/hopefully-the-final-article-about-equals-and-hashcode-for-jpa-entities-with-db-generated-ids/)
 - [QUIC / HTTP3](https://www.f5.com/glossary/quic-http3)
 
@@ -363,3 +407,4 @@ Ready-to-run API request collections:
 - `employees-schema-registry` uses Spring Cloud Stream Schema Registry for Avro/JSON schema management and validation.
 - Kafka consumer groups share an offset per group: each consumer group independently tracks which messages it has consumed; the broker maintains the offsets.
 - `UserController` in frontend modules references extra auth-related properties for OAuth2/OIDC scenarios (Keycloak integration).
+- API gateways and BFFs are not implemented in this repo, but they are natural next steps once the number of services and frontend consumers grows.

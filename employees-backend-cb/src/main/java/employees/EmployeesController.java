@@ -26,9 +26,6 @@ public class EmployeesController {
 
     @GetMapping
     public List<EmployeeResource> listEmployees(@RequestHeader HttpHeaders headers) {
-        if (random.nextInt(3) == 0) {
-            throw new RuntimeException("Simulated error");
-        }
         log.info("Listing employees, headers: {}", headers);
         return employeesService.listEmployees();
     }

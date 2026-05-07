@@ -13,6 +13,7 @@
     <artifactId>employees-frontend-avro</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <properties>
+        <java.version>26</java.version>
         <spring-cloud.version>2025.1.1</spring-cloud.version>
     </properties>
     <dependencyManagement>

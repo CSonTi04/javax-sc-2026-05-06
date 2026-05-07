@@ -13,6 +13,10 @@
 	<artifactId>employees-frontend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
+    <properties>
+        <java.version>26</java.version>
+    </properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.projectlombok</groupId>

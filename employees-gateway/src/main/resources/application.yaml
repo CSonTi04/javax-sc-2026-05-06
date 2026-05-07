@@ -3,11 +3,15 @@ spring:
     name: employees-gateway
   cloud:
     gateway:
-      webflux:
-        routes:
-          - id: employees-backend
-            uri: http://localhost:8081
-            predicates:
-              - Path=/api/employees/**
+      server:
+        webflux:
+          routes:
+            - id: employees-backend
+              uri: http://localhost:8081
+              predicates:
+                - Path=/api/employees,/api/employees/**
+              filters:
+                - AddRequestHeader=X-Training, employees-gateway
+                - 
 server:
   port: 8000

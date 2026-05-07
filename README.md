@@ -1,6 +1,6 @@
 # Spring Cloud Training Workspace
 
-This repository contains Spring Boot/Spring Cloud demos across three employees app variants: plain REST, raw Kafka, and Spring Cloud Stream.
+This repository contains Spring Boot/Spring Cloud demos across four employees app variants: plain REST, raw Kafka, Spring Cloud Stream, and Spring Cloud Stream + Avro.
 
 ## Tutor Repository
 
@@ -22,6 +22,11 @@ This repository contains Spring Boot/Spring Cloud demos across three employees a
 
 - `employees-backend-stream`: Spring Cloud Stream + Kafka binder (`:8081`)
 - `employees-frontend-stream`: sends create via `StreamBridge` (`:8080`)
+
+### Stream + Avro pair (Spring Cloud Stream + Schema Registry)
+
+- `employees-backend-avro`: Spring Cloud Stream + Avro serialization (`:8081`)
+- `employees-frontend-avro`: Avro producer/consumer with schema-aware messaging (`:8080`)
 
 ### Infra / other
 
@@ -213,6 +218,23 @@ cd employees-frontend-stream
 .\mvnw.cmd spring-boot:run
 ```
 
+Stream + Avro pair:
+
+```powershell
+cd employees-schema-registry
+.\mvnw.cmd spring-boot:run
+```
+
+```powershell
+cd employees-backend-avro
+.\mvnw.cmd spring-boot:run
+```
+
+```powershell
+cd employees-frontend-avro
+.\mvnw.cmd spring-boot:run
+```
+
 Open UI: `http://localhost:8080`
 
 ### 4) Optional config demo
@@ -315,6 +337,7 @@ Ready-to-run API request collections:
 - `employees-backend/employees.http`
 - `employees-backend-kafka/employees.http`
 - `employees-backend-stream/employees.http`
+- `employees-backend-avro/employees.http`
 
 ## Reference Links
 

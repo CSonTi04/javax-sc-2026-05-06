@@ -1,3 +1,13 @@
 spring:
   application:
-    name: employees-gatewayb
+    name: employees-gateway
+  cloud:
+    gateway:
+      webflux:
+        routes:
+          - id: employees-backend
+            uri: http://localhost:8081
+            predicates:
+              - Path=/api/employees/**
+server:
+  port: 8000

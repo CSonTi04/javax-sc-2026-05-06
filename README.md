@@ -401,7 +401,7 @@ Ready-to-run API request collections:
 - **Base**: create goes directly via `POST /api/employees` REST call.
 - **Kafka**: create goes via raw `KafkaTemplate` → topic `employees-backend-request` → `@KafkaListener`; backend then publishes `EmployeeHasBeenCreatedEvent` to `employees-backend-events`. Use the `employees-backend-*` prefix consistently.
 - **Stream**: create goes via `StreamBridge` → logical binding `backend-request` (mapped to Kafka topic `employees-backend-request` via `spring.cloud.stream.bindings` in frontend config) → Spring Cloud Stream Kafka binder consumes via `Function<CreateEmployeeRequest, CreateEmployeeResponse>` bean. Swapping the binder (e.g. RabbitMQ) requires no code change, only config.
-- All three variants use REST (`GET /api/employees`) for listing.
+- All four variants use REST (`GET /api/employees`) for listing.
 - Tutor repository reference is listed near the top of this README.
 - `java-se` is a standalone Maven module and currently targets Java 26 (`maven.compiler.source/target`).
 - `employees-schema-registry` uses Spring Cloud Stream Schema Registry for Avro/JSON schema management and validation.

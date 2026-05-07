@@ -5,8 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
-
 @Configuration(proxyBeanMethods = false)
 @Slf4j
 public class MessagingConfig {

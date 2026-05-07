@@ -110,6 +110,8 @@
                 <version>1.12.1</version>
                 <configuration>
                     <stringType>String</stringType>
+                    <sourceDirectory>${basedir}/src/main/avro</sourceDirectory>
+                    <outputDirectory>${project.build.directory}/generated-sources/avro</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -117,6 +119,24 @@
                         <goals>
                             <goal>schema</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-avro-generated-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/avro</source>
+                            </sources>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

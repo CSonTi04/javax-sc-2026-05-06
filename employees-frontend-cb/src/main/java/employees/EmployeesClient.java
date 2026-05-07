@@ -1,6 +1,7 @@
 package employees;
 
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.resilience.annotation.ConcurrencyLimit;
 import org.springframework.resilience.annotation.Retryable;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ public interface EmployeesClient {
     @GetExchange
     @Retryable(maxRetries = 3, delay = 100, multiplier = 2, maxDelay = 1000)
     @ConcurrencyLimit(3)
+    @CircuitBreaker(name = "employeesCircuitBreaker")
     List<Employee> listEmployees();
 
     @PostExchange

@@ -12,3 +12,14 @@ logging:
 
 employees:
   backend-url: http://localhost:8081
+
+resilience4j:
+  circuitbreaker:
+    instances:
+        employeesCircuitBreaker:
+            sliding-window-size: 3
+            minimum-number-of-calls: 5
+            permitted-number-of-calls-in-half-open-state: 3
+            sliding-window-type: COUNT_BASED
+            wait-duration-in-open-state: 10s
+            failure-rate-threshold: 50

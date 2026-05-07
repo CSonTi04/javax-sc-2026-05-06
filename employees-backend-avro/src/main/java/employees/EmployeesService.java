@@ -1,7 +1,6 @@
 package employees;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +12,6 @@ import java.util.function.Supplier;
 public class EmployeesService {
 
     private final EmployeesRepository repository;
-    private final ApplicationEventPublisher publisher;
 
     public List<EmployeeResource> listEmployees() {
         return repository.findAllResources();
@@ -26,9 +24,6 @@ public class EmployeesService {
     public EmployeeResource createEmployee(EmployeeResource command) {
         Employee employee = new Employee(command.getName());
         repository.save(employee);
-        //events mögött legyen objektum, legyen immutable -> record
-        //hogyan legyen json?
-        publisher.publishEvent(new EmployeeHasBeenCreatedEvent(employee.getId(), employee.getName()));
         return toDto(employee);
     }
 

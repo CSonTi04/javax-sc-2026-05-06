@@ -3,11 +3,12 @@ package employees;
 import io.micrometer.observation.annotation.Observed;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,10 +18,7 @@ import java.util.Map;
 public class EmployeesController {
 
     private EmployeesClient employeesClient;
-    //key, value -> kulcs nem egyedi, value maga az üzenet
-    //ugyanazzal a kulccsal az üzenet ugyanabba a partícióba fog kerülni -> tartja a sorrendet
-    //így pl az update nem tudná beelőzni a create-et
-    private KafkaTemplate<String, CreateEmployeeRequest> kafkaTemplate;
+    private final StreamBridge streamBridge;
 
     @GetMapping("/")
     @Observed(name = "employees.list", contextualName = "employees.list", lowCardinalityKeyValues = { "client-type", "rest-client" })
@@ -43,8 +41,9 @@ public class EmployeesController {
 
     @PostMapping("/create-employee")
     public ModelAndView createEmployeePost(@ModelAttribute Employee command) {
-        //kulcs nem kötelező
-        kafkaTemplate.send("employees-backend-request", new CreateEmployeeRequest(command.getName()));
+        //topic-ot logikai névként property-ben tároljuk, így könnyen változtatható, ha szükséges
+        streamBridge.send("backend-request", new CreateEmployeeRequest(command.getName()));
+        //itt kellene callback-es megoldás, hogy megfelelő legyen a kommunikáció, így a refresh most nem jó
         return new ModelAndView("redirect:/");
     }
 

@@ -4,14 +4,20 @@ server:
 spring:
   application:
     name: employees-frontend
-  kafka:
-    producer:
-      value-serializer: org.springframework.kafka.support.serializer.JacksonJsonSerializer
+  cloud:
+    stream:
+      bindings:
+        backend-request:
+          destination: employees-backend-request
+      function:
+        bindings:
+          employeeCreated-in-0: employees-backend-response
 
 logging:
   level:
     employees: DEBUG
     org.hibernate.SQL: TRACE
+    #lehetne a retryokat is látni a lgoban, ha debugra van állítva
 
 employees:
   backend-url: http://localhost:8081

@@ -12,14 +12,12 @@ spring:
     open-in-view: false
   liquibase:
     change-log: classpath:db/db-changelog.yaml
-  kafka:
-    producer:
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    consumer:
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      group-id: employees-backend
-      properties:
-        spring.json.trusted.packages: "employees"
+  cloud:
+    stream:
+      function:
+        bindings:
+          createEmployeeFunction-in-0: employees-backend-request
+          createEmployeeFunction-out-0: employees-backend-response
 
 logging:
   level:

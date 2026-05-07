@@ -9,6 +9,7 @@ logging:
   level:
     employees: DEBUG
     org.hibernate.SQL: TRACE
+    #lehetne a retryokat is látni a lgoban, ha debugra van állítva
 
 employees:
   backend-url: http://localhost:8081

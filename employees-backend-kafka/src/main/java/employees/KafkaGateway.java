@@ -1,11 +1,12 @@
 package employees;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -15,7 +16,7 @@ public class KafkaGateway {
     private final EmployeesService employeesService;
     private final KafkaTemplate<String, EmployeeHasBeenCreatedEvent> kafkaTemplate;
 
-    @KafkaListener(topics = "employees-bakcend-request", groupId = "employees-backend")
+    @KafkaListener(topics = "employees-backend-request", groupId = "employees-backend")
     public void handleRequest(CreateEmployeeRequest request) {
         log.info("Received request {}", request);
         employeesService.createEmployee(new EmployeeResource(request.name()));
@@ -24,6 +25,6 @@ public class KafkaGateway {
     @EventListener
     public void handleEvent(EmployeeHasBeenCreatedEvent event) {
         log.info("Received event {}", event);
-        kafkaTemplate.send("employees-bakcend-request", event);
+        kafkaTemplate.send("employees-backend-events", event);
     }
 }

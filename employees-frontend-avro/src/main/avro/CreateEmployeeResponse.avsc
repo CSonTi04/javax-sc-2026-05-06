@@ -4,7 +4,7 @@
   "namespace": "employees",
   "fields": [
     {
-      "name": "name",
+      "name": "id",
       "type": "long"
     },
     {

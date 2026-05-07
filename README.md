@@ -1,6 +1,6 @@
 # Spring Cloud Training Workspace
 
-This repository contains Spring Boot/Spring Cloud demos, with both non-Kafka and Kafka-enabled employee app variants.
+This repository contains Spring Boot/Spring Cloud demos across three employees app variants: plain REST, raw Kafka, and Spring Cloud Stream.
 
 ## Tutor Repository
 
@@ -8,14 +8,27 @@ This repository contains Spring Boot/Spring Cloud demos, with both non-Kafka and
 
 ## What Is In This Repo
 
+### Base pair (plain REST)
+
+- `employees-backend`: REST API + PostgreSQL + Liquibase (`:8081`)
+- `employees-frontend`: Thymeleaf UI, REST client (`:8080`)
+
+### Kafka pair (raw Spring Kafka)
+
+- `employees-backend-kafka`: adds `KafkaGateway` with `@KafkaListener` (`:8081`)
+- `employees-frontend-kafka`: sends create via raw `KafkaTemplate` (`:8080`)
+
+### Stream pair (Spring Cloud Stream)
+
+- `employees-backend-stream`: Spring Cloud Stream + Kafka binder (`:8081`)
+- `employees-frontend-stream`: sends create via `StreamBridge` (`:8080`)
+
+### Infra / other
+
+- `kafka/`: Docker Compose — single-node KRaft Kafka + Kafdrop
 - `config-server-demo`: Spring Cloud Config Server (`:8888`)
 - `config-client-demo`: Spring Cloud Config Client sample
-- `employees-backend`: REST API + PostgreSQL + Liquibase (`:8081`)
-- `employees-frontend`: server-side UI for `employees-backend` (`:8080`)
-- `employees-backend-kafka`: backend variant (same API/DB profile, `:8081`)
-- `employees-frontend-kafka`: frontend variant with Kafka producer (`:8080`)
 - `java-se/java-se`: standalone Java SE Maven project (`training:java-se`)
-- `kafka/`: Docker Compose infra for Kafka + Kafdrop
 
 ## Java SE Language Showcase (`java-se/java-se`)
 
@@ -28,24 +41,45 @@ This repository contains Spring Boot/Spring Cloud demos, with both non-Kafka and
 
 ## Architecture
 
+### Base pair
+
 ```mermaid
 flowchart LR
-    subgraph EmployeesBase[Employees stack (base)]
-        Browser[Browser] --> FE[employees-frontend\n:8080]
-        FE --> BE[employees-backend\n:8081]
-        BE --> PG[(PostgreSQL\n:5432)]
-    end
+    Browser[Browser] --> FE["employees-frontend :8080"]
+    FE -->|REST| BE["employees-backend :8081"]
+    BE --> PG[(PostgreSQL :5432)]
+```
 
-    subgraph EmployeesKafka[Employees stack (Kafka variant)]
-        BrowserK[Browser] --> FEK[employees-frontend-kafka\n:8080]
-        FEK --> BEK[employees-backend-kafka\n:8081]
-        BEK --> PG
-        FEK -->|publish event| Kafka[Kafka broker\n:9092]
-        Kafdrop[Kafdrop UI\n:9000] --> Kafka
-    end
+### Kafka pair
 
-    Client[config-client-demo] --> ConfigServer[config-server-demo\n:8888]
-    ConfigServer --> ConfigRepo[(Local Git config repo\nfile:///C:/Training/config)]
+```mermaid
+flowchart LR
+    Browser[Browser] --> FEK["employees-frontend-kafka :8080"]
+    FEK -->|REST GET list| BEK["employees-backend-kafka :8081"]
+    FEK -->|KafkaTemplate publish| Kafka["Kafka broker :9092"]
+    Kafka -->|KafkaListener consume| BEK
+    BEK --> PG[(PostgreSQL :5432)]
+    Kafdrop["Kafdrop :9000"] --> Kafka
+```
+
+### Stream pair
+
+```mermaid
+flowchart LR
+    Browser[Browser] --> FES["employees-frontend-stream :8080"]
+    FES -->|REST GET list| BES["employees-backend-stream :8081"]
+    FES -->|StreamBridge publish| Kafka["Kafka broker :9092"]
+    Kafka -->|Stream binder consume| BES
+    BES --> PG[(PostgreSQL :5432)]
+    Kafdrop["Kafdrop :9000"] --> Kafka
+```
+
+### Config demo
+
+```mermaid
+flowchart LR
+    Client[config-client-demo] --> CS["config-server-demo :8888"]
+    CS --> Repo[(Local Git config repo)]
 ```
 
 ## Important Choice
@@ -54,8 +88,9 @@ Run only one employees pair at a time:
 
 - base pair: `employees-backend` + `employees-frontend`
 - Kafka pair: `employees-backend-kafka` + `employees-frontend-kafka`
+- Stream pair: `employees-backend-stream` + `employees-frontend-stream`
 
-Both pairs use the same ports (`8080` and `8081`), so running both together causes port conflicts.
+All three pairs use the same ports (`8080` and `8081`), so running more than one together causes port conflicts.
 
 ## Kafka Infra (`kafka/docker-compose.yaml`)
 
@@ -125,6 +160,18 @@ cd employees-frontend-kafka
 .\mvnw.cmd spring-boot:run
 ```
 
+Stream pair:
+
+```powershell
+cd employees-backend-stream
+.\mvnw.cmd spring-boot:run
+```
+
+```powershell
+cd employees-frontend-stream
+.\mvnw.cmd spring-boot:run
+```
+
 Open UI: `http://localhost:8080`
 
 ### 4) Optional config demo
@@ -141,24 +188,53 @@ cd config-client-demo
 
 ## Startup Order
 
+### Base pair startup
+
 ```mermaid
 sequenceDiagram
     participant DB as PostgreSQL
-    participant K as Kafka
-    participant FE as employees-frontend(-kafka)
-    participant BE as employees-backend(-kafka)
-    participant CS as config-server-demo
-    participant CC as config-client-demo
+    participant BE as employees-backend
+    participant FE as employees-frontend
 
-    Note over DB,BE: Employees stack
     DB->>BE: Accept DB connections
     BE->>BE: Apply Liquibase changelog
-    FE->>BE: Call /api/employees
-    FE->>K: Publish event (Kafka frontend variant)
+    FE->>BE: GET /api/employees (list)
+    FE->>BE: POST /api/employees (create)
+    BE->>DB: Persist new employee
+```
 
-    Note over CS,CC: Config demo stack
-    CS->>CS: Load config from local Git path
-    CC->>CS: Request configuration
+### Kafka pair startup
+
+```mermaid
+sequenceDiagram
+    participant DB as PostgreSQL
+    participant K as Kafka broker
+    participant BEK as employees-backend-kafka
+    participant FEK as employees-frontend-kafka
+
+    DB->>BEK: Accept DB connections
+    BEK->>BEK: Apply Liquibase changelog
+    FEK->>BEK: GET /api/employees (list)
+    FEK->>K: KafkaTemplate.send - CreateEmployeeRequest
+    K->>BEK: @KafkaListener consume
+    BEK->>DB: Persist new employee
+```
+
+### Stream pair startup
+
+```mermaid
+sequenceDiagram
+    participant DB as PostgreSQL
+    participant K as Kafka broker
+    participant BES as employees-backend-stream
+    participant FES as employees-frontend-stream
+
+    DB->>BES: Accept DB connections
+    BES->>BES: Apply Liquibase changelog
+    FES->>BES: GET /api/employees (list)
+    FES->>K: StreamBridge.send - backend-request binding
+    K->>BES: Stream binder consume
+    BES->>DB: Persist new employee
 ```
 
 ## Useful Endpoints
@@ -173,13 +249,15 @@ Ready-to-run API request collections:
 
 - `employees-backend/employees.http`
 - `employees-backend-kafka/employees.http`
+- `employees-backend-stream/employees.http`
 
 ## Notes
 
 - Config Server points to `file:///C:/Training/config`; adjust `config-server-demo/src/main/resources/application.properties` if needed.
-- Kafka topics used by the Kafka variant: `employees-backend-request`, `employees-backend-events`, and `employees-backend-response`.
-- Use the `employees-backend-*` topic prefix consistently (avoid the `employees-bakcend-*` typo).
-- Create flow: frontend publishes `CreateEmployeeRequest` to `employees-backend-request`; backend listener persists to DB; backend publishes `EmployeeHasBeenCreatedEvent` to `employees-backend-events`.
+- **Base**: create goes directly via `POST /api/employees` REST call.
+- **Kafka**: create goes via raw `KafkaTemplate` → topic `employees-backend-request` → `@KafkaListener`; backend then publishes `EmployeeHasBeenCreatedEvent` to `employees-backend-events`. Use the `employees-backend-*` prefix consistently.
+- **Stream**: create goes via `StreamBridge` → logical binding `backend-request` → Spring Cloud Stream Kafka binder; swapping the binder (e.g. RabbitMQ) requires no code change.
+- All three variants use REST (`GET /api/employees`) for listing.
 - Tutor repository reference is listed near the top of this README.
 - `java-se/java-se` is a separate Maven module and currently targets Java 26 (`maven.compiler.source/target`).
 - `UserController` in frontend modules references extra auth-related properties for some scenarios.

@@ -9,8 +9,10 @@ spring:
       bindings:
         backend-request:
           destination: employees-backend-request
-        employeeCreated-in-0:
-          mimeType: application/*+avro
+          content-type: application/*+avro
+        employees-backend-response:
+          destination: employees-backend-response
+          content-type: application/*+avro
       function:
         bindings:
           employeeCreated-in-0: employees-backend-response

@@ -10,7 +10,7 @@
 	</parent>
 
 	<groupId>training</groupId>
-	<artifactId>employees-frontend-stream</artifactId>
+	<artifactId>employees-frontend-avro</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
 		<spring-cloud.version>2025.1.1</spring-cloud.version>
@@ -69,6 +69,11 @@
 			<groupId>org.springframework.kafka</groupId>
 			<artifactId>spring-kafka-test</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-stream-schema-registry-client</artifactId>
+			<version>5.0.1</version>
 		</dependency>
 
 	</dependencies>

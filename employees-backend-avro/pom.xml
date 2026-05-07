@@ -10,7 +10,7 @@
 	</parent>
 
 	<groupId>training</groupId>
-	<artifactId>employees-backend-stream</artifactId>
+	<artifactId>employees-backend-avro</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<properties>
 		<spring-cloud.version>2025.1.1</spring-cloud.version>

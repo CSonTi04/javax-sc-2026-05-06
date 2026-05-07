@@ -26,9 +26,10 @@ This repository contains Spring Boot/Spring Cloud demos across three employees a
 ### Infra / other
 
 - `kafka/`: Docker Compose — single-node KRaft Kafka + Kafdrop
+- `employees-schema-registry`: Schema Registry for Kafka message schemas (`:8990`)
 - `config-server-demo`: Spring Cloud Config Server (`:8888`)
 - `config-client-demo`: Spring Cloud Config Client sample
-- `java-se/java-se`: standalone Java SE Maven project (`training:java-se`)
+- `java-se`: standalone Java SE Maven project (`training:java-se`)
 
 ## Java SE Language Showcase (`java-se/java-se`)
 
@@ -37,7 +38,7 @@ This repository contains Spring Boot/Spring Cloud demos across three employees a
 - Pattern matching `switch` over a sealed type in `Main#szamitKozeppont`
 - Record patterns in `switch` cases (`case Kor(Pont kozeppont, _)`)
 - Local variable type inference with `var`
-- Modern compiler target set to Java 26 in `java-se/java-se/pom.xml`
+- Modern compiler target set to Java 26 in `java-se/pom.xml`
 
 ## Architecture
 
@@ -106,6 +107,8 @@ Listener layout:
 - `EXTERNAL` (`:9092`) for host-machine clients
 - `CLIENT` (`kafka:9093`) for Docker-network clients (for example Kafdrop)
 - `CONTROLLER` (`:9094`) for KRaft controller traffic
+
+**Optional**: `employees-schema-registry` (port `:8990`) is a separate Spring Boot app for managing Avro/JSON schemas. Start it with `cd employees-schema-registry; .\mvnw.cmd spring-boot:run` if using schema-based serialization in the Stream variant.
 
 ## Prerequisites
 
@@ -256,8 +259,9 @@ Ready-to-run API request collections:
 - Config Server points to `file:///C:/Training/config`; adjust `config-server-demo/src/main/resources/application.properties` if needed.
 - **Base**: create goes directly via `POST /api/employees` REST call.
 - **Kafka**: create goes via raw `KafkaTemplate` → topic `employees-backend-request` → `@KafkaListener`; backend then publishes `EmployeeHasBeenCreatedEvent` to `employees-backend-events`. Use the `employees-backend-*` prefix consistently.
-- **Stream**: create goes via `StreamBridge` → logical binding `backend-request` → Spring Cloud Stream Kafka binder; swapping the binder (e.g. RabbitMQ) requires no code change.
+- **Stream**: create goes via `StreamBridge` → logical binding `backend-request` (mapped to Kafka topic `employees-backend-request` via `spring.cloud.stream.bindings` in frontend config) → Spring Cloud Stream Kafka binder consumes via `Function<CreateEmployeeRequest, CreateEmployeeResponse>` bean. Swapping the binder (e.g. RabbitMQ) requires no code change, only config.
 - All three variants use REST (`GET /api/employees`) for listing.
 - Tutor repository reference is listed near the top of this README.
-- `java-se/java-se` is a separate Maven module and currently targets Java 26 (`maven.compiler.source/target`).
+- `java-se` is a standalone Maven module and currently targets Java 26 (`maven.compiler.source/target`).
+- `employees-schema-registry` uses Spring Cloud Stream Schema Registry for Avro/JSON schema management and validation.
 - `UserController` in frontend modules references extra auth-related properties for some scenarios.

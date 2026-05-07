@@ -76,8 +76,9 @@ flowchart LR
 flowchart LR
     Browser[Browser] --> FEK["employees-frontend-kafka :8080"]
     FEK -->|REST GET list| BEK["employees-backend-kafka :8081"]
-    FEK -->|KafkaTemplate publish| Kafka["Kafka broker :9092"]
-    Kafka -->|KafkaListener consume| BEK
+    FEK -->|publish CreateEmployeeRequest to employees-backend-request| Kafka["Kafka broker :9092"]
+    Kafka -->|consume employees-backend-request| BEK
+    BEK -->|publish EmployeeHasBeenCreatedEvent to employees-backend-events| Kafka
     BEK --> PG[(PostgreSQL :5432)]
     Kafdrop["Kafdrop :9000"] --> Kafka
 ```
@@ -88,10 +89,24 @@ flowchart LR
 flowchart LR
     Browser[Browser] --> FES["employees-frontend-stream :8080"]
     FES -->|REST GET list| BES["employees-backend-stream :8081"]
-    FES -->|StreamBridge publish| Kafka["Kafka broker :9092"]
-    Kafka -->|Stream binder consume| BES
+    FES -->|StreamBridge backend-request to employees-backend-request| Kafka["Kafka broker :9092"]
+    Kafka -->|binder consume createEmployeeFunction-in-0| BES
+    BES -->|binder publish createEmployeeFunction-out-0 to employees-backend-response| Kafka
     BES --> PG[(PostgreSQL :5432)]
     Kafdrop["Kafdrop :9000"] --> Kafka
+```
+
+### Stream plus Avro pair
+
+```mermaid
+flowchart LR
+    Browser[Browser] --> FEA["employees-frontend-avro :8080"]
+    FEA -->|REST GET list| BEA["employees-backend-avro :8081"]
+    FEA -->|Avro publish employees-backend-request| Kafka["Kafka broker :9092"]
+    BEA -->|Avro publish employees-backend-response| Kafka
+    FEA -->|schema resolve/register| SR["employees-schema-registry :8990"]
+    BEA -->|schema resolve/register| SR
+    BEA --> PG[(PostgreSQL :5432)]
 ```
 
 ### Config demo
@@ -109,15 +124,16 @@ Run only one employees pair at a time:
 - base pair: `employees-backend` + `employees-frontend`
 - Kafka pair: `employees-backend-kafka` + `employees-frontend-kafka`
 - Stream pair: `employees-backend-stream` + `employees-frontend-stream`
+- Stream + Avro pair: `employees-backend-avro` + `employees-frontend-avro`
 
-All three pairs use the same ports (`8080` and `8081`), so running more than one together causes port conflicts.
+All four pairs use the same ports (`8080` and `8081`), so running more than one together causes port conflicts.
 
 ## Kafka Infra (`kafka/docker-compose.yaml`)
 
 Single-node KRaft cluster (no ZooKeeper).
 
 | Service | Image | Ports |
-|---|---|---|
+| --- | --- | --- |
 | `kafka` | `apache/kafka:4.2.0` | `9092` (host access) |
 | `kafdrop` | `obsidiandynamics/kafdrop:4.2.0` | `9000` (web UI) |
 
@@ -240,9 +256,10 @@ sequenceDiagram
     DB->>BEK: Accept DB connections
     BEK->>BEK: Apply Liquibase changelog
     FEK->>BEK: GET /api/employees (list)
-    FEK->>K: KafkaTemplate.send - CreateEmployeeRequest
-    K->>BEK: @KafkaListener consume
+    FEK->>K: KafkaTemplate.send CreateEmployeeRequest to employees-backend-request
+    K->>BEK: @KafkaListener consumes employees-backend-request
     BEK->>DB: Persist new employee
+    BEK->>K: Publish EmployeeHasBeenCreatedEvent to employees-backend-events
 ```
 
 ### Stream pair startup
@@ -257,9 +274,32 @@ sequenceDiagram
     DB->>BES: Accept DB connections
     BES->>BES: Apply Liquibase changelog
     FES->>BES: GET /api/employees (list)
-    FES->>K: StreamBridge.send - backend-request binding
-    K->>BES: Stream binder consume
+    FES->>K: StreamBridge.send via backend-request binding to employees-backend-request
+    K->>BES: Binder consumes createEmployeeFunction-in-0
     BES->>DB: Persist new employee
+    BES->>K: Binder publishes createEmployeeFunction-out-0 to employees-backend-response
+```
+
+### Stream plus Avro pair startup
+
+```mermaid
+sequenceDiagram
+    participant DB as PostgreSQL
+    participant K as Kafka broker
+    participant SR as Schema Registry
+    participant BEA as employees-backend-avro
+    participant FEA as employees-frontend-avro
+
+    DB->>BEA: Accept DB connections
+    BEA->>BEA: Apply Liquibase changelog
+    FEA->>BEA: GET /api/employees (list)
+    FEA->>SR: Resolve/register request schema
+    FEA->>K: Publish Avro CreateEmployeeRequest to employees-backend-request
+    K->>BEA: Binder consumes request
+    BEA->>DB: Persist new employee
+    BEA->>SR: Resolve/register response schema
+    BEA->>K: Publish Avro CreateEmployeeResponse to employees-backend-response
+    K->>FEA: Binder consumer receives response
 ```
 
 ## Useful Endpoints

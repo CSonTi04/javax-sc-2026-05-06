@@ -14,7 +14,17 @@ This repository contains Spring Boot/Spring Cloud demos, with both non-Kafka and
 - `employees-frontend`: server-side UI for `employees-backend` (`:8080`)
 - `employees-backend-kafka`: backend variant (same API/DB profile, `:8081`)
 - `employees-frontend-kafka`: frontend variant with Kafka producer (`:8080`)
+- `java-se/java-se`: standalone Java SE Maven project (`training:java-se`)
 - `kafka/`: Docker Compose infra for Kafka + Kafdrop
+
+## Java SE Language Showcase (`java-se/java-se`)
+
+- Records for immutable domain models: `Pont`, `Kor`, `Teglalap`
+- Sealed hierarchy with explicit permitted types: `Alakzat permits Kor, Teglalap`
+- Pattern matching `switch` over a sealed type in `Main#szamitKozeppont`
+- Record patterns in `switch` cases (`case Kor(Pont kozeppont, _)`)
+- Local variable type inference with `var`
+- Modern compiler target set to Java 26 in `java-se/java-se/pom.xml`
 
 ## Architecture
 
@@ -167,6 +177,9 @@ Ready-to-run API request collections:
 ## Notes
 
 - Config Server points to `file:///C:/Training/config`; adjust `config-server-demo/src/main/resources/application.properties` if needed.
-- `employees-frontend-kafka` defines topic `hello` (10 partitions) and publishes an event when creating an employee.
-- Kafka publish currently happens in `employees-frontend-kafka` (`EmployeesController`), not in the backend modules.
+- Kafka topics used by the Kafka variant: `employees-backend-request`, `employees-backend-events`, and `employees-backend-response`.
+- Use the `employees-backend-*` topic prefix consistently (avoid the `employees-bakcend-*` typo).
+- Create flow: frontend publishes `CreateEmployeeRequest` to `employees-backend-request`; backend listener persists to DB; backend publishes `EmployeeHasBeenCreatedEvent` to `employees-backend-events`.
+- Tutor repository reference is listed near the top of this README.
+- `java-se/java-se` is a separate Maven module and currently targets Java 26 (`maven.compiler.source/target`).
 - `UserController` in frontend modules references extra auth-related properties for some scenarios.

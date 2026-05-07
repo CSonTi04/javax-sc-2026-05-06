@@ -2,6 +2,10 @@
 
 This repository contains Spring Boot/Spring Cloud demos, with both non-Kafka and Kafka-enabled employee app variants.
 
+## Tutor Repository
+
+- [Training360/javax-sc-2026-05-06](https://github.com/Training360/javax-sc-2026-05-06)
+
 ## What Is In This Repo
 
 - `config-server-demo`: Spring Cloud Config Server (`:8888`)

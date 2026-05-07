@@ -31,14 +31,33 @@ This repository contains Spring Boot/Spring Cloud demos across three employees a
 - `config-client-demo`: Spring Cloud Config Client sample
 - `java-se`: standalone Java SE Maven project (`training:java-se`)
 
-## Java SE Language Showcase (`java-se/java-se`)
+## Spring Ecosystem Overview
 
-- Records for immutable domain models: `Pont`, `Kor`, `Teglalap`
-- Sealed hierarchy with explicit permitted types: `Alakzat permits Kor, Teglalap`
-- Pattern matching `switch` over a sealed type in `Main#szamitKozeppont`
-- Record patterns in `switch` cases (`case Kor(Pont kozeppont, _)`)
-- Local variable type inference with `var`
-- Modern compiler target set to Java 26 in `java-se/pom.xml`
+| Project | Role |
+| --- | --- |
+| **Spring Framework** | Core foundation: DI, IoC, AOP, transactions, MVC/WebFlux |
+| **Spring Boot** | Auto-configuration, embedded servers, sensible defaults, production features |
+| **Spring Cloud** | Distributed systems toolbox: config, discovery, circuit breakers, gateways, tracing |
+| **Spring Data** | Repository abstractions over SQL, JPA, JDBC, NoSQL, Redis, Elasticsearch |
+| **Spring Security** | Auth, authorization, OAuth2, JWT, CSRF, method security |
+| **Spring Integration** | Enterprise integration patterns: channels, routers, adapters |
+| **Spring Batch** | Large-scale batch processing: chunked reads/writes, retries, restarts |
+| **Spring AI** | LLM abstractions, embeddings, vector stores, RAG (not covered in this course) |
+
+Spring Boot apps follow the [12-factor app methodology](https://12factor.net/).
+
+## Java SE Language Showcase (`java-se`)
+
+Modern Java 26 features demonstrated in this module:
+
+- **Records** — immutable domain models: `Pont`, `Kor`, `Teglalap`
+- **Sealed classes** — explicit permitted hierarchy: `Alakzat permits Kor, Teglalap`
+- **Pattern matching `switch`** over a sealed type in `Main#szamitKozeppont`
+- **Record patterns** in `switch` cases (`case Kor(Pont kozeppont, _)`)
+- **Unnamed variables** — `_` wildcard in record patterns
+- **Local variable type inference** — `var`
+- **Virtual threads** — lightweight concurrency via `Thread.ofVirtual()` (Project Loom)
+- **Data-oriented programming** — prefer immutable value types over deep OOP hierarchies; reduce class proliferation with sealed types + pattern matching
 
 ## Architecture
 
@@ -112,8 +131,11 @@ Listener layout:
 
 ## Prerequisites
 
-- Java + Maven Wrapper (`mvnw`/`mvnw.cmd` in each module)
+- JDK 26
+- Git
+- IntelliJ IDEA Ultimate
 - Docker (PostgreSQL + Kafka)
+- Maven Wrapper (`mvnw`/`mvnw.cmd`) included in each module — no separate Maven install needed
 
 ## Quick Start
 
@@ -254,6 +276,18 @@ Ready-to-run API request collections:
 - `employees-backend-kafka/employees.http`
 - `employees-backend-stream/employees.http`
 
+## Reference Links
+
+- [Microservice patterns](https://microservices.io/patterns/)
+- [Enterprise Integration Patterns](https://www.enterpriseintegrationpatterns.com/) — the theory behind Spring Integration
+- [Spring Cloud Stream](https://spring.io/projects/spring-cloud-stream)
+- [Spring Cloud Schema Registry](https://docs.spring.io/spring-cloud-schema-registry/docs/current/reference/html/spring-cloud-schema-registry.html)
+- [Spring Core Resilience features](https://spring.io/blog/2025/09/09/core-spring-resilience-features)
+- [Resilience4j](https://resilience4j.readme.io/docs/getting-started)
+- [Spring Modulith](https://www.jtechlog.hu/2022/12/19/spring-modulith.html)
+- [JPA equals/hashCode deep-dive](https://jpa-buddy.com/blog/hopefully-the-final-article-about-equals-and-hashcode-for-jpa-entities-with-db-generated-ids/)
+- [QUIC / HTTP3](https://www.f5.com/glossary/quic-http3)
+
 ## Notes
 
 - Config Server points to `file:///C:/Training/config`; adjust `config-server-demo/src/main/resources/application.properties` if needed.
@@ -264,4 +298,5 @@ Ready-to-run API request collections:
 - Tutor repository reference is listed near the top of this README.
 - `java-se` is a standalone Maven module and currently targets Java 26 (`maven.compiler.source/target`).
 - `employees-schema-registry` uses Spring Cloud Stream Schema Registry for Avro/JSON schema management and validation.
-- `UserController` in frontend modules references extra auth-related properties for some scenarios.
+- Kafka consumer groups share an offset per group: each consumer group independently tracks which messages it has consumed; the broker maintains the offsets.
+- `UserController` in frontend modules references extra auth-related properties for OAuth2/OIDC scenarios (Keycloak integration).

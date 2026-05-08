@@ -1,6 +1,11 @@
 # Spring Cloud Training Workspace
 
-This repository contains Spring Boot/Spring Cloud demos across four employees app variants: plain REST, raw Kafka, Spring Cloud Stream, and Spring Cloud Stream + Avro.
+This repository contains Spring Boot/Spring Cloud demos across four core employees app variants: plain REST, raw Kafka, Spring Cloud Stream, and Spring Cloud Stream + Avro.
+
+It also includes resilience and edge-routing demos:
+
+- dedicated circuit-breaker variants (`employees-frontend-cb`, `employees-backend-cb`)
+- a standalone Spring Cloud Gateway module with fallback routing (`employees-gateway`)
 
 ## Tutor Repository
 
@@ -27,6 +32,18 @@ This repository contains Spring Boot/Spring Cloud demos across four employees ap
 
 - `employees-backend-avro`: Spring Cloud Stream + Avro serialization (`:8081`)
 - `employees-frontend-avro`: Avro producer/consumer with schema-aware messaging (`:8080`)
+
+### Circuit breaker pair (Resilience demo)
+
+- `employees-backend-cb`: backend variant used in resilience/circuit-breaker exercises (`:8081`)
+- `employees-frontend-cb`: frontend variant with retry + circuit breaker + actuator endpoint (`:8080`)
+
+### API Gateway module
+
+- `employees-gateway`: Spring Cloud Gateway WebFlux app (`:8000`)
+- Routes `/api/employees` and `/api/employees/**` to `http://localhost:8081`
+- Uses `CircuitBreaker` filter with fallback to `forward:/api/dummy-employees`
+- Fallback endpoint serves dummy data from `DummyEmployeesController` as `Flux<EmployeeDto>`
 
 ### Infra / other
 
@@ -148,6 +165,15 @@ flowchart LR
     BEA --> PG[(PostgreSQL :5432)]
 ```
 
+### API Gateway with fallback
+
+```mermaid
+flowchart LR
+    Browser[Browser or HTTP client] --> GW["employees-gateway :8000"]
+    GW -->|route /api/employees| BE["employees-backend :8081"]
+    GW -->|on downstream failure: forward:/api/dummy-employees| Dummy["DummyEmployeesController"]
+```
+
 ### Config demo
 
 ```mermaid
@@ -164,8 +190,11 @@ Run only one employees pair at a time:
 - Kafka pair: `employees-backend-kafka` + `employees-frontend-kafka`
 - Stream pair: `employees-backend-stream` + `employees-frontend-stream`
 - Stream + Avro pair: `employees-backend-avro` + `employees-frontend-avro`
+- Circuit breaker pair: `employees-backend-cb` + `employees-frontend-cb`
 
-All four pairs use the same ports (`8080` and `8081`), so running more than one together causes port conflicts.
+All five pairs use the same ports (`8080` and `8081`), so running more than one together causes port conflicts.
+
+`employees-gateway` uses `:8000`, so it can run alongside any one backend variant.
 
 ## Kafka Infra (`kafka/docker-compose.yaml`)
 
@@ -269,6 +298,25 @@ cd employees-frontend-avro
 .\mvnw.cmd spring-boot:run
 ```
 
+Circuit breaker pair:
+
+```powershell
+cd employees-backend-cb
+.\mvnw.cmd spring-boot:run
+```
+
+```powershell
+cd employees-frontend-cb
+.\mvnw.cmd spring-boot:run
+```
+
+Gateway (optional, can front a running backend on `:8081`):
+
+```powershell
+cd employees-gateway
+.\mvnw.cmd spring-boot:run
+```
+
 Open UI: `http://localhost:8080`
 
 ### 4) Optional config demo
@@ -358,6 +406,28 @@ sequenceDiagram
     K->>FEA: Binder consumer receives response
 ```
 
+### Gateway fallback startup
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant GW as employees-gateway
+    participant BE as backend on 8081
+    participant D as Dummy controller
+
+    C->>GW: GET /api/employees
+    GW->>BE: Route to http://localhost:8081/api/employees
+    alt backend healthy
+        BE-->>GW: 200 employees payload
+        GW-->>C: 200 employees payload
+    else backend unavailable or failing
+        GW->>GW: CircuitBreaker opens/trips
+        GW->>D: forward:/api/dummy-employees
+        D-->>GW: Flux<EmployeeDto>
+        GW-->>C: 200 dummy employees
+    end
+```
+
 ## Architectural Notes
 
 - **EDA**: event-driven architecture is a natural fit for Kafka and Spring Cloud Stream. Spring Integration is the Spring project that most directly implements the Enterprise Integration Patterns vocabulary.
@@ -373,6 +443,7 @@ sequenceDiagram
 - **Service mesh / sidecars**: resilience, traffic control, and chaos testing can also move into the platform layer through sidecars and service mesh tooling such as Istio.
 - **Observability**: distributed systems become much easier to debug once metrics, logs, traces, and correlation IDs are treated as first-class concerns.
 - **SBOM awareness**: software bills of materials matter when you need to understand dependency exposure and security posture across multiple services.
+- **Gateway fallback strategy**: the gateway module demonstrates edge-level resilience via a `CircuitBreaker` filter and local dummy fallback endpoint.
 
 ## Day 2 Topics
 
@@ -382,6 +453,14 @@ sequenceDiagram
 - **Platform concerns**: Kubernetes sidecars and service mesh infrastructure can absorb some cross-cutting concerns that would otherwise be repeated in each microservice.
 - **Implementation caution**: business code should stay simple and explicit; heavy reflection and unnecessary abstraction are usually framework concerns, not application goals.
 
+## Day 3 Topics
+
+- **Saga orchestration**: long-running business workflows and compensation logic.
+- **Workflow engines**: tradeoffs around BPMN/BPEL style orchestration and operational complexity.
+- **Temporal-style approach**: workflow-as-code with service communication and state persistence.
+- **Versioned workflows**: handling workflow evolution without breaking in-flight process instances.
+- **Security lab setup**: local Keycloak bootstrap for OAuth2/OIDC scenarios.
+
 ## Useful Endpoints
 
 - Frontend UI: `http://localhost:8080`
@@ -389,6 +468,9 @@ sequenceDiagram
 - Backend API by id: `GET http://localhost:8081/api/employees/{id}`
 - Config client demo: `GET http://localhost:8080/api/hello` (when running `config-client-demo`)
 - Kafdrop: `http://localhost:9000`
+- Gateway route: `GET http://localhost:8000/api/employees`
+- Gateway dummy fallback: `GET http://localhost:8000/api/dummy-employees`
+- Circuit breaker actuator demo: `GET http://localhost:8080/actuator/circuitbreakers` (when running `employees-frontend-cb`)
 
 Ready-to-run API request collections:
 
@@ -396,6 +478,8 @@ Ready-to-run API request collections:
 - `employees-backend-kafka/employees.http`
 - `employees-backend-stream/employees.http`
 - `employees-backend-avro/employees.http`
+- `employees-gateway/gateway.http`
+- `employees-frontend-cb/actuator.http`
 
 ## Reading Material
 
@@ -420,6 +504,12 @@ Ready-to-run API request collections:
 - [Java virtual threads](https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html)
 - [JPA equals/hashCode deep-dive](https://jpa-buddy.com/blog/hopefully-the-final-article-about-equals-and-hashcode-for-jpa-entities-with-db-generated-ids/)
 - [QUIC / HTTP3](https://www.f5.com/glossary/quic-http3)
+- [Spring Statemachine](https://spring.io/projects/spring-statemachine)
+- [Baeldung Spring Statemachine](https://www.baeldung.com/spring-state-machine)
+- [Baeldung Activiti](https://www.baeldung.com/java-activiti)
+- [Camunda](https://github.com/camunda)
+- [Temporal](https://temporal.io/)
+- [Keycloak container quickstart](https://www.keycloak.org/getting-started/getting-started-docker)
 
 ## Notes
 
@@ -433,5 +523,11 @@ Ready-to-run API request collections:
 - `employees-schema-registry` uses Spring Cloud Stream Schema Registry for Avro/JSON schema management and validation.
 - Kafka consumer groups share an offset per group: each consumer group independently tracks which messages it has consumed; the broker maintains the offsets.
 - `UserController` in frontend modules references extra auth-related properties for OAuth2/OIDC scenarios (Keycloak integration).
-- API gateways and BFFs are not implemented in this repo, but they are natural next steps once the number of services and frontend consumers grows.
+- `employees-gateway` is implemented and demonstrates gateway-level fallback behavior (`/api/employees` -> fallback `/api/dummy-employees`).
+- `employees-frontend-cb` demonstrates client-side resilience configuration and actuator visibility for circuit breakers.
 - The notes also frame virtual threads as an important modern alternative to older reactive-only scaling discussions.
+- Keycloak local bootstrap command from notes:
+
+```powershell
+docker run -d -p 8090:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin --name keycloak quay.io/keycloak/keycloak start-dev
+```

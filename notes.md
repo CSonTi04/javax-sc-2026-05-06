@@ -145,3 +145,30 @@ Virtuáis szál foglal memóriát a stackjével
 Virtuális szál egy sima objekt, ezért nagyon gyorsan léterjönnek
 Fizikai szálak esetén kb 100 a limit mondjuk 8 cpu mag esetén
 Javaban írt ütemező van, hogy a carrier-re kerüljön a virtuális szál
+
+Pinning még probléma lehet, de ezt nagy eséllyel pá jdk relesae után már megoldják
+Régen api gateway-t csak reactive módond lehetett írni, de most már nem
+
+3.nap
+Saga - Orechestration
+https://spring.io/projects/spring-statemachine
+https://www.baeldung.com/spring-state-machine
+
+István szerint nem éri meg, nem jól oldották meg
+
+BPMN?
+SOA workflow motorok segítségével megoldhatják a z üzleti elképzelést
+BPEL -> Activiti motor
+https://www.baeldung.com/java-activiti
+Az output xml középpen sajnos :|
+https://github.com/camunda
+Itt már nincsen lightweight jar, elvesztette az egyszerűségét
+
+Workflow verziózás is bejöhet sajnos, hogyha változik hogy legyen a két verzió
+
+Temporal?
+https://temporal.io/
+
+Workflow-t javaban lehet megírni -> ms-ekkel grpc-vel beszél
+
+docker run -d -p 8090:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin --name keycloak quay.io/keycloak/keycloak start-dev

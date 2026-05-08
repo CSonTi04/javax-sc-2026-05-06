@@ -27,3 +27,10 @@ Thumbs.db
 *.tmp
 *.swp
 
+# --- Accidental IDE/build export folders ---
+employees-backend-stream/bin/
+employees-frontend-avro/bin/
+employees-frontend-stream/bin/
+employees-schema-registry/bin/
+java-se/bin/
+

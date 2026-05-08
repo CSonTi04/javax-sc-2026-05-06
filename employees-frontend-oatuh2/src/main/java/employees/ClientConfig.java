@@ -6,13 +6,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpRequestInterceptor;
-import org.springframework.security.oauth2.client.web.reactive.function.client.ServerOAuth2AuthorizedClientExchangeFilterFunction;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.client.support.RestClientHttpServiceGroupConfigurer;
-import org.springframework.web.service.invoker.HttpExchangeAdapter;
-import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import org.springframework.web.service.registry.ImportHttpServices;
+
+import static org.springframework.security.oauth2.client.web.client.RequestAttributeClientRegistrationIdResolver.clientRegistrationId;
 
 @Configuration
 @EnableConfigurationProperties(EmployeesProperties.class)
@@ -31,6 +28,10 @@ public class ClientConfig {
                 log.debug("Configuring RestClient group: {}", group);
                 builder
                     .baseUrl(employeesProperties.getBackendUrl())
+                    .requestInterceptor((request, body, execution) -> {
+                        clientRegistrationId("keycloak").accept(request.getAttributes());
+                        return execution.execute(request, body);
+                    })
                     .requestInterceptor(interceptor);
             });
     }

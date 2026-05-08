@@ -12,6 +12,9 @@ spring:
                 - Path=/api/employees,/api/employees/**
               filters:
                 - AddRequestHeader=X-Training, employees-gateway
-                - CircuitBreaker=name=employeesBackendCircuitBreaker,fallbackUri=forward:/api/dummy-employees
+                - name: CircuitBreaker
+                  args:
+                    name: employeesBackendCircuitBreaker
+                    fallbackUri: forward:/api/dummy-employees
 server:
   port: 8000

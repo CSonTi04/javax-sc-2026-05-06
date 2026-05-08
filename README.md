@@ -38,6 +38,15 @@ It also includes resilience and edge-routing demos:
 - `employees-backend-cb`: backend variant used in resilience/circuit-breaker exercises (`:8081`)
 - `employees-frontend-cb`: frontend variant with retry + circuit breaker + actuator endpoint (`:8080`)
 
+### OAuth2 / Keycloak pair
+
+- `employees-backend`: same REST backend as the base pair (`:8081`)
+- `employees-frontend-oatuh2`: Thymeleaf UI with Spring Security OAuth2 client + Keycloak OIDC (`:8080`)
+  - `/` public, `/create-employee` requires authentication, all other routes require `ROLE_employee_admin`
+  - `authorization_code` flow against Keycloak `EmployeesRealm`
+  - Logout success URL: `/`
+  - `EmployeesController` logs authenticated principal name from `SecurityContextHolder`
+
 ### API Gateway module
 
 - `employees-gateway`: Spring Cloud Gateway WebFlux app (`:8000`)
@@ -174,6 +183,16 @@ flowchart LR
     GW -->|on downstream failure: forward:/api/dummy-employees| Dummy["DummyEmployeesController"]
 ```
 
+### OAuth2 pair
+
+```mermaid
+flowchart LR
+    Browser[Browser] --> FEO["employees-frontend-oatuh2 :8080"]
+    FEO -->|OIDC authorization_code login| KC["Keycloak :8090 EmployeesRealm"]
+    FEO -->|REST| BE["employees-backend :8081"]
+    BE --> PG[(PostgreSQL :5432)]
+```
+
 ### Config demo
 
 ```mermaid
@@ -191,8 +210,9 @@ Run only one employees pair at a time:
 - Stream pair: `employees-backend-stream` + `employees-frontend-stream`
 - Stream + Avro pair: `employees-backend-avro` + `employees-frontend-avro`
 - Circuit breaker pair: `employees-backend-cb` + `employees-frontend-cb`
+- OAuth2 pair: `employees-backend` + `employees-frontend-oatuh2`
 
-All five pairs use the same ports (`8080` and `8081`), so running more than one together causes port conflicts.
+All six pairs use the same ports (`8080` and `8081`), so running more than one together causes port conflicts.
 
 `employees-gateway` uses `:8000`, so it can run alongside any one backend variant.
 
@@ -428,6 +448,25 @@ sequenceDiagram
     end
 ```
 
+### OAuth2 pair startup
+
+```mermaid
+sequenceDiagram
+    participant DB as PostgreSQL
+    participant FE as employees-frontend-oatuh2
+    participant KC as Keycloak
+    participant BE as employees-backend
+
+    DB->>BE: Accept DB connections
+    BE->>BE: Apply Liquibase changelog
+    FE->>KC: Redirect user to authorization endpoint
+    KC-->>FE: Redirect back with authorization code
+    FE->>KC: Exchange code for tokens
+    FE->>BE: GET /api/employees (authenticated session)
+    FE->>BE: POST /api/employees (authenticated session)
+    BE->>DB: Persist new employee
+```
+
 ## Architectural Notes
 
 - **EDA**: event-driven architecture is a natural fit for Kafka and Spring Cloud Stream. Spring Integration is the Spring project that most directly implements the Enterprise Integration Patterns vocabulary.
@@ -464,6 +503,7 @@ sequenceDiagram
 ## Useful Endpoints
 
 - Frontend UI: `http://localhost:8080`
+- Keycloak admin: `http://localhost:8090`
 - Backend API list: `GET http://localhost:8081/api/employees`
 - Backend API by id: `GET http://localhost:8081/api/employees/{id}`
 - Config client demo: `GET http://localhost:8080/api/hello` (when running `config-client-demo`)
@@ -531,3 +571,6 @@ Ready-to-run API request collections:
 ```powershell
 docker run -d -p 8090:8080 -e KC_BOOTSTRAP_ADMIN_USERNAME=admin -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin --name keycloak quay.io/keycloak/keycloak start-dev
 ```
+
+- **OAuth2**: `employees-frontend-oatuh2` uses Keycloak as OIDC provider. Security rules: `/` is public, `/create-employee` requires authentication, everything else requires `ROLE_employee_admin`. The `redirect-uri` template must be `"{baseUrl}/login/oauth2/code/{registrationId}"`. Provider config must be nested under `spring.security.oauth2.client.provider` (not `spring.security.oauth2.provider`). Keycloak client `employees-frontend` must list `http://localhost:8080/*` in Valid Redirect URIs and `http://localhost:8080` in Web Origins.
+- **Keycloak admin API**: acquire an admin token via `POST /realms/master/protocol/openid-connect/token` with `client_id=admin-cli`, then use a `Bearer` header for admin REST calls (e.g. patching client redirect URIs).

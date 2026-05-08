@@ -3,6 +3,7 @@ package employees;
 import io.micrometer.observation.annotation.Observed;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,7 +21,11 @@ public class EmployeesController {
 
     @GetMapping("/")
     @Observed(name = "employees.list", contextualName = "employees.list", lowCardinalityKeyValues = { "client-type", "rest-client" })
-    public ModelAndView listEmployees() {
+    public ModelAndView listEmployees(Principal principal) {
+        log.info(principal.getName());
+        var securityContext = SecurityContextHolder.getContext().getAuthentication();
+        assert securityContext != null;
+        log.info("Security context is {}", securityContext.getName());
         log.info("Employees list page");
         Map<String, Object> model = new HashMap<>();
         model.put("employees", employeesClient.listEmployees());

@@ -14,10 +14,8 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(registry -> registry
-                        .requestMatchers("/api/employees", HttpMethod.POST.name())
-                        .authenticated()
-                        .anyRequest()
-                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/employees").authenticated()
+                        .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer(resourceServer -> resourceServer.jwt(Customizer.withDefaults()));
 

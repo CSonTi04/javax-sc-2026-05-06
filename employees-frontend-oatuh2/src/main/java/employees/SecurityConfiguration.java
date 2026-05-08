@@ -22,6 +22,7 @@ public class SecurityConfiguration {
                 )
                 .oauth2Login(Customizer.withDefaults())
                 .logout(Customizer.withDefaults())
+                .logout(logout -> logout.logoutSuccessUrl("/"))
         ;
 
         return http.build();

@@ -21,10 +21,9 @@ spring:
               - openid
               - profile
               - email
-              -
-      provider:
-        keycloak:
-          issuer-uri: http://localhost:8090/realms/EmployeesRealm
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8090/realms/EmployeesRealm
 
 logging:
   level:

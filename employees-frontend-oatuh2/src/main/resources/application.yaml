@@ -14,7 +14,7 @@ spring:
             client-id: employees-frontend
             authorization-grant-type: authorization_code
             #ez az oauth2 provider által megengedett redirect-uri, a {baseUrl} helyére a frontend url-je kerül majd
-            redirect-uri: "{baseUrl}/login/oauth2/code/"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             #megmondja, hogy a token-ben milyen adatok legyenek, ezeket a backend-en is be kell állítani
             # consent mechanism-hoz lett kitalálva, hogy a user lássa, hogy milyen adatokhoz fér hozzá az alkalmazás, saját scope-okat is létre lehet hozni a keycloak-ban, de most csak a standard scope-okat használjuk
             scope:

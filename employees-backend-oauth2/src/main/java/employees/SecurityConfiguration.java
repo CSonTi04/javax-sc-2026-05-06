@@ -11,14 +11,16 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfiguration {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests(registry -> registry
-                        .requestMatchers(HttpMethod.POST, "/api/employees").authenticated()
-                        .anyRequest().permitAll()
+                .authorizeHttpRequests(authz ->
+                        authz.requestMatchers(HttpMethod.POST, "/api/employees").
+                        authenticated()
+                                .anyRequest()
+                                .permitAll()
                 )
-                .oauth2ResourceServer(resourceServer -> resourceServer.jwt(Customizer.withDefaults()));
-
+                .oauth2ResourceServer(oauth2 ->
+                        oauth2.jwt(Customizer.withDefaults()));
         return http.build();
     }
 }

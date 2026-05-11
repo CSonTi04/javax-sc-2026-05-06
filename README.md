@@ -351,6 +351,80 @@ cd config-client-demo
 .\mvnw.cmd spring-boot:run
 ```
 
+### 5) Optional observability demo (OpenTelemetry Java agent)
+
+These commands enable automatic telemetry collection for Java apps without code changes.
+
+```bash
+curl -L -O https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
+set JAVA_TOOL_OPTIONS="-javaagent:opentelemetry-javaagent.jar"
+set OTEL_TRACES_EXPORTER=otlp
+set OTEL_METRICS_EXPORTER=otlp
+set OTEL_LOGS_EXPORTER=otlp
+set OTEL_METRIC_EXPORT_INTERVAL=15000
+```
+
+What each variable means:
+
+- `JAVA_TOOL_OPTIONS`: injects the OpenTelemetry Java agent into every JVM started from that shell.
+- `OTEL_TRACES_EXPORTER=otlp`: exports distributed traces using OTLP.
+- `OTEL_METRICS_EXPORTER=otlp`: exports metrics using OTLP.
+- `OTEL_LOGS_EXPORTER=otlp`: exports logs using OTLP.
+- `OTEL_METRIC_EXPORT_INTERVAL=15000`: sends metrics every 15 seconds.
+
+To try this with the base pair (`employees-backend` + `employees-frontend`):
+
+1. Start PostgreSQL first (from Quick Start step 1).
+2. Start an OTLP receiver (for local demo, Jaeger all-in-one):
+
+```powershell
+docker run --rm --name jaeger -p 16686:16686 -p 4317:4317 -e COLLECTOR_OTLP_ENABLED=true jaegertracing/all-in-one:latest
+```
+
+3. Download the agent jar once in workspace root:
+
+```powershell
+cd C:\Repos\javax-sc-2026-05-06
+curl -L -O https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
+```
+
+4. Start backend with agent (new shell):
+
+```powershell
+cd employees-backend
+$env:JAVA_HOME = "C:\DevTools\Java\jdk-26.0.1"
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+$env:JAVA_TOOL_OPTIONS = "-javaagent:C:\Repos\javax-sc-2026-05-06\opentelemetry-javaagent.jar"
+$env:OTEL_SERVICE_NAME = "employees-backend"
+$env:OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4317"
+$env:OTEL_TRACES_EXPORTER = "otlp"
+$env:OTEL_METRICS_EXPORTER = "none"
+$env:OTEL_LOGS_EXPORTER = "none"
+.\mvnw.cmd spring-boot:run
+```
+
+5. Start frontend with agent (second shell):
+
+```powershell
+cd employees-frontend
+$env:JAVA_HOME = "C:\DevTools\Java\jdk-26.0.1"
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+$env:JAVA_TOOL_OPTIONS = "-javaagent:C:\Repos\javax-sc-2026-05-06\opentelemetry-javaagent.jar"
+$env:OTEL_SERVICE_NAME = "employees-frontend"
+$env:OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4317"
+$env:OTEL_TRACES_EXPORTER = "otlp"
+$env:OTEL_METRICS_EXPORTER = "none"
+$env:OTEL_LOGS_EXPORTER = "none"
+.\mvnw.cmd spring-boot:run
+```
+
+6. Generate traffic via `http://localhost:8080` and then open Jaeger UI at `http://localhost:16686`.
+
+Notes:
+
+- `set ...` commands shown above are for `cmd.exe`; in PowerShell use `$env:NAME = "value"`.
+- If you keep `OTEL_METRICS_EXPORTER=otlp` and `OTEL_LOGS_EXPORTER=otlp`, make sure your collector supports metrics/log ingestion too.
+
 ## Startup Order
 
 ### Base pair startup
